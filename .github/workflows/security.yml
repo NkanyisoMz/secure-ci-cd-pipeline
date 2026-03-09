@@ -3,32 +3,66 @@ name: Security Pipeline
 on:
   push:
     branches: [ main ]
-
   pull_request:
-    branches: [ main ]
 
 jobs:
-  container-scan:
 
+  secret-scan:
+    name: Secret Scan (Gitleaks)
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v3
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-
-      - name: Build Docker image
-        run: |
-          docker build -t secure-ci-demo .
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
 
 
-      - name: Run Trivy vulnerability scanner
+  sast:
+    name: SAST Scan (Semgrep)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/security-audit"
+
+
+  dependency-scan:
+    name: Dependency Scan (pip-audit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit
+        run: pip-audit
+
+
+  container-scan:
+    name: Container Scan (Trivy)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build container
+        run: docker build -t secure-ci-demo .
+
+      - name: Run Trivy
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: secure-ci-demo
-          format: table
+          severity: HIGH,CRITICAL
           exit-code: 1
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'HIGH,CRITICAL'
