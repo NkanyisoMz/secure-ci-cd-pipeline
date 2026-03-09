@@ -14,8 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install Gitleaks
+        run: |
+          wget https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz
+          tar -xzf gitleaks-linux-amd64.tar.gz
+          sudo mv gitleaks /usr/local/bin/
+
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        run: gitleaks detect --source . --verbose --redact
+
 
 
   sast:
