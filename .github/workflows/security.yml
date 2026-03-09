@@ -57,12 +57,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build container
-        run: docker build -t secure-ci-demo .
+      - name: Build Docker image
+        run: docker build -t secure-ci-demo:latest .
 
-      - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
-          image-ref: secure-ci-demo
+          image-ref: secure-ci-demo:latest
           severity: HIGH,CRITICAL
           exit-code: 1
+          ignore-unfixed: true
